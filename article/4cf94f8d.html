@@ -1,0 +1,445 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>llmfinetune | MasterY Blog</title><meta name="author" content="YU"><meta name="copyright" content="YU"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><meta name="description" content="base模型和chat模型的区别是什么 base模型是在大规模语料上以LM这种形式的预训练任务（预测下一个token）训练得来的；chat模型是在base模型上sft+rlhf上微调得来的。base模型已经有很强大的能力了，但是需要tuning即sft+强化学习rlhf后得到chat模型，对齐了人类的自然语言解锁base模型的强大能力。简而言之，base模型很强但是听不懂人话，需要用少量的tun">
+<meta property="og:type" content="article">
+<meta property="og:title" content="llmfinetune">
+<meta property="og:url" content="https://github.com/yjangout/yjangout.github.io/article/4cf94f8d.html">
+<meta property="og:site_name" content="MasterY Blog">
+<meta property="og:description" content="base模型和chat模型的区别是什么 base模型是在大规模语料上以LM这种形式的预训练任务（预测下一个token）训练得来的；chat模型是在base模型上sft+rlhf上微调得来的。base模型已经有很强大的能力了，但是需要tuning即sft+强化学习rlhf后得到chat模型，对齐了人类的自然语言解锁base模型的强大能力。简而言之，base模型很强但是听不懂人话，需要用少量的tun">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg">
+<meta property="article:published_time" content="2024-01-10T06:49:08.000Z">
+<meta property="article:modified_time" content="2024-04-02T12:30:10.564Z">
+<meta property="article:author" content="YU">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://github.com/yjangout/yjangout.github.io/article/4cf94f8d"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//hm.baidu.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.css" media="print" onload="this.media='all'"><script>var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?080fb54ae1b544737f616c169ead4783";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+</script><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  date_suffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: {"chs_to_cht":"你已切换为繁体","cht_to_chs":"你已切换为简体","day_to_night":"你已切换为深色模式","night_to_day":"你已切换为浅色模式","bgLight":"#49b1f5","bgDark":"#121212","position":"top-right"},
+  source: {
+    jQuery: 'https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js',
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/js/jquery.justifiedGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/justifiedGallery/dist/css/justifiedGallery.min.css'
+    },
+    fancybox: {
+      js: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: true,
+  isanchor: false
+};
+
+var saveToLocal = {
+  set: function setWithExpiry(key, value, ttl) {
+    const now = new Date()
+    const expiryDay = ttl * 86400000
+    const item = {
+      value: value,
+      expiry: now.getTime() + expiryDay,
+    }
+    localStorage.setItem(key, JSON.stringify(item))
+  },
+
+  get: function getWithExpiry(key) {
+    const itemStr = localStorage.getItem(key)
+
+    if (!itemStr) {
+      return undefined
+    }
+    const item = JSON.parse(itemStr)
+    const now = new Date()
+
+    if (now.getTime() > item.expiry) {
+      localStorage.removeItem(key)
+      return undefined
+    }
+    return item.value
+  }
+}
+
+// https://stackoverflow.com/questions/16839698/jquery-getscript-alternative-in-native-javascript
+const getScript = url => new Promise((resolve, reject) => {
+  const script = document.createElement('script')
+  script.src = url
+  script.async = true
+  script.onerror = reject
+  script.onload = script.onreadystatechange = function() {
+    const loadState = this.readyState
+    if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+    script.onload = script.onreadystatechange = null
+    resolve()
+  }
+  document.head.appendChild(script)
+})</script><script id="config_change">var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2024-04-02 20:30:10'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(function () {  window.activateDarkMode = function () {
+    document.documentElement.setAttribute('data-theme', 'dark')
+    if (document.querySelector('meta[name="theme-color"]') !== null) {
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+    }
+  }
+  window.activateLightMode = function () {
+    document.documentElement.setAttribute('data-theme', 'light')
+   if (document.querySelector('meta[name="theme-color"]') !== null) {
+      document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+    }
+  }
+  const autoChangeMode = 'false'
+  const t = saveToLocal.get('theme')
+  if (autoChangeMode === '1') {
+    const isDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const isLightMode = window.matchMedia('(prefers-color-scheme: light)').matches
+    const isNotSpecified = window.matchMedia('(prefers-color-scheme: no-preference)').matches
+    const hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+    if (t === undefined) {
+      if (isLightMode) activateLightMode()
+      else if (isDarkMode) activateDarkMode()
+      else if (isNotSpecified || hasNoSupport) {
+        const now = new Date()
+        const hour = now.getHours()
+        const isNight = hour <= 6 || hour >= 18
+        isNight ? activateDarkMode() : activateLightMode()
+      }
+      window.matchMedia('(prefers-color-scheme: dark)').addListener(function (e) {
+        if (saveToLocal.get('theme') === undefined) {
+          e.matches ? activateDarkMode() : activateLightMode()
+        }
+      })
+    } else if (t === 'light') activateLightMode()
+    else activateDarkMode()
+  } else if (autoChangeMode === '2') {
+    const now = new Date()
+    const hour = now.getHours()
+    const isNight = hour <= 6 || hour >= 18
+    if (t === undefined) isNight ? activateDarkMode() : activateLightMode()
+    else if (t === 'light') activateLightMode()
+    else activateDarkMode()
+  } else {
+    if (t === 'dark') activateDarkMode()
+    else if (t === 'light') activateLightMode()
+  }const asideStatus = saveToLocal.get('aside-status')
+if (asideStatus !== undefined) {
+   if (asideStatus === 'hide') {
+     document.documentElement.classList.add('hide-aside')
+   } else {
+     document.documentElement.classList.remove('hide-aside')
+   }
+}const fontSizeVal = saveToLocal.get('global-font-size')
+if (fontSizeVal !== undefined) {
+  document.documentElement.style.setProperty('--global-font-size', fontSizeVal + 'px')
+}})()</script><link rel="stylesheet" href="/css/mycss.css"><meta name="generator" content="Hexo 5.4.2"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="author-avatar"><img class="avatar-img" data-lazy-src="https://cdn.jsdelivr.net/gh/junyucoding/static@master/images/avater1.jpeg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data"><div class="data-item is-center"><div class="data-item-link"><a href="/archives/"><div class="headline">文章</div><div class="length-num">18</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/tags/"><div class="headline">标签</div><div class="length-num">18</div></a></div></div><div class="data-item is-center"><div class="data-item-link"><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fa fa-paper-plane"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-book"></i><span> 找文章</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page" href="/album/"><i class="fa-fw fa fa-camera"></i><span> 相册</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/comments/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fa fa-book"></i><span> 今日说</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div><div class="menus_item"><a class="site-page" href="/box/"><i class="fa-fw fa fa-box"></i><span> 聚宝盒</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background-image: url(https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg)"><nav id="nav"><span id="blog_name"><a id="site-name" href="/">MasterY Blog</a></span><div id="menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 时间轴</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fa fa-paper-plane"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fa fa-book"></i><span> 找文章</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></li><li><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="javascript:void(0);"><i class="fa-fw fas fa-list"></i><span> 生活</span><i class="fas fa-chevron-down expand"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/music/"><i class="fa-fw fas fa-music"></i><span> 音乐</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fas fa-video"></i><span> 电影</span></a></li><li><a class="site-page" href="/album/"><i class="fa-fw fa fa-camera"></i><span> 相册</span></a></li></ul></div><div class="menus_item"><a class="site-page" href="/comments/"><i class="fa-fw fas fa-comments"></i><span> 留言板</span></a></div><div class="menus_item"><a class="site-page" href="/shuoshuo/"><i class="fa-fw fa fa-book"></i><span> 今日说</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fas fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于</span></a></div><div class="menus_item"><a class="site-page" href="/box/"><i class="fa-fw fa fa-box"></i><span> 聚宝盒</span></a></div></div><div id="toggle-menu"><a class="site-page"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">llmfinetune</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-01-10T06:49:08.000Z" title="发表于 2024-01-10 14:49:08">2024-01-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2024-04-02T12:30:10.564Z" title="更新于 2024-04-02 20:30:10">2024-04-02</time></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"></span></span><span class="post-meta-separator">|</span><span class="post-meta-commentcount"><i class="far fa-comments fa-fw post-meta-icon"></i><span class="post-meta-label">评论数:</span><a href="/article/4cf94f8d.html#post-comment"><span id="twikoo-count"></span></a></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><h2 id="base模型和chat模型的区别是什么"><a class="markdownIt-Anchor" href="#base模型和chat模型的区别是什么"></a> base模型和chat模型的区别是什么</h2>
+<p>base模型是在大规模语料上以LM这种形式的预训练任务（预测下一个token）训练得来的；chat模型是在base模型上sft+rlhf上微调得来的。base模型已经有很强大的能力了，但是需要tuning即sft+强化学习rlhf后得到chat模型，对齐了人类的自然语言解锁base模型的强大能力。简而言之，base模型很强但是听不懂人话，需要用少量的tuning数据来让它听懂人话，进而和人类对话。</p>
+<h2 id="rlhf"><a class="markdownIt-Anchor" href="#rlhf"></a> RLHF</h2>
+<h2 id="deepspeed"><a class="markdownIt-Anchor" href="#deepspeed"></a> deepspeed</h2>
+<p>deepspeed的使用有很多功能的实现依赖于配置文件的参数配置，为了弄清楚配置文件中每个参数的意义，本文主要是对官方配置文档的学习使用记录。</p>
+<h2 id="一-批量大小的相关参数"><a class="markdownIt-Anchor" href="#一-批量大小的相关参数"></a> 一、<strong>批量大小的相关参数</strong></h2>
+<h3 id="1-train_batch_sizeint"><a class="markdownIt-Anchor" href="#1-train_batch_sizeint"></a> 1、train_batch_size[int]</h3>
+<p>有效训练批量大小。这是导致模型更新一步的数据样本量。train_batch_size由单个 GPU 在一次前向/后向传递中处理的批量大小（又称为train_micro_batch_size_per_gpu）、梯度累积步骤（又称为gradient_accumulation_steps）和 GPU 数量共同决定。如果同时提供了train_micro_batch_size_per_gpu和gradient_accumulation_steps，则可以省略。</p>
+<h3 id="2-train_micro_batch_size_per_gpuint"><a class="markdownIt-Anchor" href="#2-train_micro_batch_size_per_gpuint"></a> 2、train_micro_batch_size_per_gpu[int]</h3>
+<p><strong>一个GPU one step 处理的批量大小（无梯度累积）</strong>。如果同时提供了train_batch_size和gradient_accumulation_steps，则可以省略</p>
+<h3 id="3-gradient_accumulation_steps"><a class="markdownIt-Anchor" href="#3-gradient_accumulation_steps"></a> 3、gradient_accumulation_steps</h3>
+<p><strong>在平均和应用梯度之前累积梯度的训练步骤数</strong>。此功能有时对于提高可扩展性很有用，因为<strong>它会导致步骤之间梯度通信的频率降低</strong>。此功能的另一个影响是能够在每个 GPU 上使用更大的批量大小进行训练。如果同时提供了train_batch_size和train_micro_batch_size_per_gpu，则可以省略</p>
+<h2 id="二-优化器相关的参数"><a class="markdownIt-Anchor" href="#二-优化器相关的参数"></a> 二、优化器相关的参数</h2>
+<p>DeepSpeed 原生支持<strong>Adam</strong>、<strong>AdamW</strong>、<strong>OneBitAdam</strong>、<strong>Lamb</strong>和<strong>OneBitLamb</strong>优化器（可参考：<a href="https://link.zhihu.com/?target=https%3A//deepspeed.readthedocs.io/en/latest/optimizers.html">Optimizers - DeepSpeed 0.10.1 documentation</a>）</p>
+<h3 id="1-adam-adamw优化器的使用"><a class="markdownIt-Anchor" href="#1-adam-adamw优化器的使用"></a> 1、Adam、AdamW优化器的使用</h3>
+<p>常用的一些参数配置如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">&quot;optimizer&quot;: &#123;</span><br><span class="line">    &quot;type&quot;: &quot;Adam&quot;,</span><br><span class="line">    &quot;params&quot;: &#123;</span><br><span class="line">      &quot;lr&quot;: 0.001,</span><br><span class="line">      &quot;betas&quot;: [</span><br><span class="line">        0.8,</span><br><span class="line">        0.999</span><br><span class="line">      ],</span><br><span class="line">      &quot;eps&quot;: 1e-8,</span><br><span class="line">      &quot;weight_decay&quot;: 3e-7</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>以上参数可以参考torch中对Adam的实现：<a href="https://link.zhihu.com/?target=https%3A//pytorch.org/docs/stable/_modules/torch/optim/adam.html%23Adam">torch.optim.adam - PyTorch 2.0 documentation</a></p>
+<p>除此之外，deepspeed的实现中这里还支持其它两个参数：</p>
+<p>1）torch_adam：默认为False,代表是否使用torch实现的adam而不使用deepspeed实现的。</p>
+<p>2）adam_w_mode：应用L2 regularization，就是AdamW优化器</p>
+<h3 id="2-1-bit-adam-optimizer"><a class="markdownIt-Anchor" href="#2-1-bit-adam-optimizer"></a> 2、1-bit Adam optimizer</h3>
+<p>优化器的介绍参考：<a href="https://link.zhihu.com/?target=https%3A//www.deepspeed.ai/tutorials/onebit-adam/">1-bit Adam: Up to 5x less communication volume and up to 3.4x faster training</a></p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">&quot;optimizer&quot;: &#123;</span><br><span class="line">    &quot;type&quot;: &quot;OneBitAdam&quot;,</span><br><span class="line">    &quot;params&quot;: &#123;</span><br><span class="line">      &quot;lr&quot;: 0.001,</span><br><span class="line">      &quot;betas&quot;: [</span><br><span class="line">        0.8,</span><br><span class="line">        0.999</span><br><span class="line">      ],</span><br><span class="line">      &quot;eps&quot;: 1e-8,</span><br><span class="line">      &quot;weight_decay&quot;: 3e-7,</span><br><span class="line">      &quot;freeze_step&quot;: 400,</span><br><span class="line">      &quot;cuda_aware&quot;: false,</span><br><span class="line">      &quot;comm_backend_name&quot;: &quot;nccl&quot;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>相比于标准的Adam这里额外支持3个参数</p>
+<p>1）freeze_step：将1位压缩应用于通信之前的预热步骤数</p>
+<p>2）cuda_aware：指示底层 MPI 库支持 CUDA 感知通信</p>
+<p>3）comm_backend_name：指示要使用的后端实现</p>
+<p>这些都是用于分布式训练时通信相关的参数。</p>
+<h2 id="三-通过fp16训练相关的参数"><a class="markdownIt-Anchor" href="#三-通过fp16训练相关的参数"></a> 三、通过FP16训练相关的参数</h2>
+<p>配置使用混合精度进行训练，通过利用 NVIDIA 的 Apex 软件包。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&quot;fp16&quot;: &#123;</span><br><span class="line">    &quot;enabled&quot;: true,</span><br><span class="line">    &quot;auto_cast&quot;: false,</span><br><span class="line">    &quot;loss_scale&quot;: 0,</span><br><span class="line">    &quot;initial_scale_power&quot;: 16,</span><br><span class="line">    &quot;loss_scale_window&quot;: 1000,</span><br><span class="line">    &quot;hysteresis&quot;: 2,</span><br><span class="line">    &quot;consecutive_hysteresis&quot;: false,</span><br><span class="line">    &quot;min_loss_scale&quot;: 1</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>1、enabled</p>
+<p>默认为False，标识是否使用混合精度训练</p>
+<p>2、auto_cast</p>
+<p>默认为False，标识是否把输入强制转换为fp16数据类型</p>
+<p>3、loss_scale</p>
+<p>表示 FP16训练的损失缩放值。默认值0.0启用动态损失缩放，否则该值将用于静态固定损失缩放</p>
+<p>4、initial_scale_power</p>
+<p>表示初始动态损失比例值的功率。实际损失规模计算为 2^{initial_scale_power }</p>
+<p>5、loss_scale_window</p>
+<p>表示升高/降低动态损失比例值的窗口</p>
+<p>6、hysteresis</p>
+<p>表示动态损耗缩放中的延迟偏移</p>
+<p>7、min_loss_scale</p>
+<p>表示最小动态损失比例值</p>
+<h2 id="四-通过bfloat16-训练相关的参数"><a class="markdownIt-Anchor" href="#四-通过bfloat16-训练相关的参数"></a> 四、通过BFLOAT16 训练相关的参数</h2>
+<p>注意：该模式不能和FP16模式以及amp模式一起使用</p>
+<p>同时这种模式的使用对硬件也有要求（例如A100显卡）</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&quot;bf16&quot;: &#123;</span><br><span class="line">   &quot;enabled&quot;: true</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<h2 id="五-fp16-训练的-zero-优化"><a class="markdownIt-Anchor" href="#五-fp16-训练的-zero-优化"></a> 五、FP16 训练的 ZeRO 优化</h2>
+<p>启用和配置ZeRO内存优化的参数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">&quot;zero_optimization&quot;: &#123;</span><br><span class="line">    &quot;stage&quot;: [0|1|2|3],</span><br><span class="line">    &quot;allgather_partitions&quot;: [true|false],</span><br><span class="line">    &quot;allgather_bucket_size&quot;: 5e8,</span><br><span class="line">    &quot;overlap_comm&quot;: false,</span><br><span class="line">    &quot;reduce_scatter&quot;: [true|false],</span><br><span class="line">    &quot;reduce_bucket_size&quot;: 5e8,</span><br><span class="line">    &quot;contiguous_gradients&quot; : [true|false],</span><br><span class="line">    &quot;offload_param&quot;: &#123;</span><br><span class="line">      ...</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;offload_optimizer&quot;: &#123;</span><br><span class="line">      ...</span><br><span class="line">    &#125;,</span><br><span class="line">    &quot;stage3_max_live_parameters&quot; : 1e9,</span><br><span class="line">    &quot;stage3_max_reuse_distance&quot; : 1e9,</span><br><span class="line">    &quot;stage3_prefetch_bucket_size&quot; : 5e8,</span><br><span class="line">    &quot;stage3_param_persistence_threshold&quot; : 1e6,</span><br><span class="line">    &quot;sub_group_size&quot; : 1e12,</span><br><span class="line">    &quot;elastic_checkpoint&quot; : [true|false],</span><br><span class="line">    &quot;stage3_gather_16bit_weights_on_model_save&quot;: [true|false],</span><br><span class="line">    &quot;ignore_unused_parameters&quot;: [true|false]</span><br><span class="line">    &quot;round_robin_gradients&quot;: [true|false]</span><br><span class="line">    &quot;zero_hpz_partition_size&quot;: 1</span><br><span class="line">    &quot;zero_quantized_weights&quot;: [true|false]</span><br><span class="line">    &quot;zero_quantized_gradients&quot;: [true|false]</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+<p>[]中记录的是可选值</p>
+<p>在配置文件中添加zero_optimization的配置才表示启用该优化器</p>
+<p>1、stage</p>
+<p>选择 ZeRO Optimizer 的不同阶段。阶段0、1、2和3分别指禁用、优化器状态分区、优化器+梯度状态分区和优化器+梯度+参数分区。</p>
+<p>2、offload_param</p>
+<p>参数卸载：启用和配置参数卸载到 CPU/NVMe 的 ZeRO 优化。仅适用于 ZeRO 阶段 3。请注意，如果未指定或不支持“device”的值，则会触发断言。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">&quot;offload_param&quot;: &#123;</span><br><span class="line">    &quot;device&quot;: &quot;[cpu|nvme]&quot;,</span><br><span class="line">    &quot;nvme_path&quot;: &quot;/local_nvme&quot;,</span><br><span class="line">    &quot;pin_memory&quot;: [true|false],</span><br><span class="line">    &quot;buffer_count&quot;: 5,</span><br><span class="line">    &quot;buffer_size&quot;: 1e8,</span><br><span class="line">    &quot;max_in_cpu&quot;: 1e9</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>3、offload_optimizer</p>
+<p>优化器卸载：启用和配置 ZeRO 优化，将优化器计算卸载到 CPU 并将状态卸载到 CPU/NVMe。CPU 卸载适用于 ZeRO 阶段 1、2、3。NVMe 卸载仅适用于 ZeRO 阶段 3。请注意，如果未指定或不支持“device”的值，将触发断言。</p>
+<p>4、下面是使用ZeRO优化不同阶段的配置案例</p>
+<p>第0阶段：禁用所有类型的分片，仅使用 DeepSpeed 作为 DDP</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 0</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第1阶段：第1阶段是第2阶段减去梯度分片。您始终可以尝试它来稍微加快速度，仅使用以下方式对优化器状态进行分片</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 1</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第2阶段：第2阶段可以自动配置一些参数，也可以手动配置。</p>
+<p>先是自动配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;fp16&quot;: &#123;</span><br><span class="line">        &quot;enabled&quot;: &quot;auto&quot;,</span><br><span class="line">        &quot;loss_scale&quot;: 0,</span><br><span class="line">        &quot;loss_scale_window&quot;: 1000,</span><br><span class="line">        &quot;initial_scale_power&quot;: 16,</span><br><span class="line">        &quot;hysteresis&quot;: 2,</span><br><span class="line">        &quot;min_loss_scale&quot;: 1</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;optimizer&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;AdamW&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;betas&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;eps&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;weight_decay&quot;: &quot;auto&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;scheduler&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;WarmupLR&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;warmup_min_lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;warmup_max_lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;warmup_num_steps&quot;: &quot;auto&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 2,</span><br><span class="line">        &quot;offload_optimizer&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;allgather_partitions&quot;: true,</span><br><span class="line">        &quot;allgather_bucket_size&quot;: 2e8,</span><br><span class="line">        &quot;overlap_comm&quot;: true,</span><br><span class="line">        &quot;reduce_scatter&quot;: true,</span><br><span class="line">        &quot;reduce_bucket_size&quot;: 2e8,</span><br><span class="line">        &quot;contiguous_gradients&quot;: true</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;gradient_accumulation_steps&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;gradient_clipping&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;steps_per_print&quot;: 2000,</span><br><span class="line">    &quot;train_batch_size&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;train_micro_batch_size_per_gpu&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;wall_clock_breakdown&quot;: false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>其次是手动配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;fp16&quot;: &#123;</span><br><span class="line">        &quot;enabled&quot;: true,</span><br><span class="line">        &quot;loss_scale&quot;: 0,</span><br><span class="line">        &quot;loss_scale_window&quot;: 1000,</span><br><span class="line">        &quot;initial_scale_power&quot;: 16,</span><br><span class="line">        &quot;hysteresis&quot;: 2,</span><br><span class="line">        &quot;min_loss_scale&quot;: 1</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;optimizer&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;AdamW&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;lr&quot;: 3e-5,</span><br><span class="line">            &quot;betas&quot;: [0.8, 0.999],</span><br><span class="line">            &quot;eps&quot;: 1e-8,</span><br><span class="line">            &quot;weight_decay&quot;: 3e-7</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;scheduler&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;WarmupLR&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;warmup_min_lr&quot;: 0,</span><br><span class="line">            &quot;warmup_max_lr&quot;: 3e-5,</span><br><span class="line">            &quot;warmup_num_steps&quot;: 500</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 2,</span><br><span class="line">        &quot;offload_optimizer&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;allgather_partitions&quot;: true,</span><br><span class="line">        &quot;allgather_bucket_size&quot;: 2e8,</span><br><span class="line">        &quot;overlap_comm&quot;: true,</span><br><span class="line">        &quot;reduce_scatter&quot;: true,</span><br><span class="line">        &quot;reduce_bucket_size&quot;: 2e8,</span><br><span class="line">        &quot;contiguous_gradients&quot;: true</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;steps_per_print&quot;: 2000,</span><br><span class="line">    &quot;wall_clock_breakdown&quot;: false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>第3阶段：第3阶段可以自动配置一些参数，也可以手动配置。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;fp16&quot;: &#123;</span><br><span class="line">        &quot;enabled&quot;: &quot;auto&quot;,</span><br><span class="line">        &quot;loss_scale&quot;: 0,</span><br><span class="line">        &quot;loss_scale_window&quot;: 1000,</span><br><span class="line">        &quot;initial_scale_power&quot;: 16,</span><br><span class="line">        &quot;hysteresis&quot;: 2,</span><br><span class="line">        &quot;min_loss_scale&quot;: 1</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;optimizer&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;AdamW&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;betas&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;eps&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;weight_decay&quot;: &quot;auto&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;scheduler&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;WarmupLR&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;warmup_min_lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;warmup_max_lr&quot;: &quot;auto&quot;,</span><br><span class="line">            &quot;warmup_num_steps&quot;: &quot;auto&quot;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 3,</span><br><span class="line">        &quot;offload_optimizer&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;offload_param&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;overlap_comm&quot;: true,</span><br><span class="line">        &quot;contiguous_gradients&quot;: true,</span><br><span class="line">        &quot;sub_group_size&quot;: 1e9,</span><br><span class="line">        &quot;reduce_bucket_size&quot;: &quot;auto&quot;,</span><br><span class="line">        &quot;stage3_prefetch_bucket_size&quot;: &quot;auto&quot;,</span><br><span class="line">        &quot;stage3_param_persistence_threshold&quot;: &quot;auto&quot;,</span><br><span class="line">        &quot;stage3_max_live_parameters&quot;: 1e9,</span><br><span class="line">        &quot;stage3_max_reuse_distance&quot;: 1e9,</span><br><span class="line">        &quot;stage3_gather_16bit_weights_on_model_save&quot;: true</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;gradient_accumulation_steps&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;gradient_clipping&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;steps_per_print&quot;: 2000,</span><br><span class="line">    &quot;train_batch_size&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;train_micro_batch_size_per_gpu&quot;: &quot;auto&quot;,</span><br><span class="line">    &quot;wall_clock_breakdown&quot;: false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>手动配置</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    &quot;fp16&quot;: &#123;</span><br><span class="line">        &quot;enabled&quot;: true,</span><br><span class="line">        &quot;loss_scale&quot;: 0,</span><br><span class="line">        &quot;loss_scale_window&quot;: 1000,</span><br><span class="line">        &quot;initial_scale_power&quot;: 16,</span><br><span class="line">        &quot;hysteresis&quot;: 2,</span><br><span class="line">        &quot;min_loss_scale&quot;: 1</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;optimizer&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;AdamW&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;lr&quot;: 3e-5,</span><br><span class="line">            &quot;betas&quot;: [0.8, 0.999],</span><br><span class="line">            &quot;eps&quot;: 1e-8,</span><br><span class="line">            &quot;weight_decay&quot;: 3e-7</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;scheduler&quot;: &#123;</span><br><span class="line">        &quot;type&quot;: &quot;WarmupLR&quot;,</span><br><span class="line">        &quot;params&quot;: &#123;</span><br><span class="line">            &quot;warmup_min_lr&quot;: 0,</span><br><span class="line">            &quot;warmup_max_lr&quot;: 3e-5,</span><br><span class="line">            &quot;warmup_num_steps&quot;: 500</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;zero_optimization&quot;: &#123;</span><br><span class="line">        &quot;stage&quot;: 3,</span><br><span class="line">        &quot;offload_optimizer&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;offload_param&quot;: &#123;</span><br><span class="line">            &quot;device&quot;: &quot;cpu&quot;,</span><br><span class="line">            &quot;pin_memory&quot;: true</span><br><span class="line">        &#125;,</span><br><span class="line">        &quot;overlap_comm&quot;: true,</span><br><span class="line">        &quot;contiguous_gradients&quot;: true,</span><br><span class="line">        &quot;sub_group_size&quot;: 1e9,</span><br><span class="line">        &quot;reduce_bucket_size&quot;: 1e6,</span><br><span class="line">        &quot;stage3_prefetch_bucket_size&quot;: 0.94e6,</span><br><span class="line">        &quot;stage3_param_persistence_threshold&quot;: 1e4,</span><br><span class="line">        &quot;stage3_max_live_parameters&quot;: 1e9,</span><br><span class="line">        &quot;stage3_max_reuse_distance&quot;: 1e9,</span><br><span class="line">        &quot;stage3_gather_16bit_weights_on_model_save&quot;: true</span><br><span class="line">    &#125;,</span><br><span class="line"></span><br><span class="line">    &quot;steps_per_print&quot;: 2000,</span><br><span class="line">    &quot;wall_clock_breakdown&quot;: false</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>5、ZeRO-2 与 ZeRO-3 性能对比</p>
+<p>如果其他配置相同，ZeRO-3 可能会比 ZeRO-2 慢，因为除了 ZeRO-2 之外，前者还必须收集模型权重。如果 ZeRO-2 满足您的需求，并且您不需要扩展到几个 GPU 之外，那么您可以选择坚持使用它。重要的是要了解，ZeRO-3 以速度为代价实现了更高的可扩展性。</p>
+<p>6、如何选择使用哪个 ZeRO 阶段和卸载以获得最佳性能</p>
+<p>一般来说，以下内容适用：</p>
+<ul>
+<li>速度方面（左边比右边快）</li>
+</ul>
+<p>阶段 0 (DDP) &gt; 阶段 1 &gt; 阶段 2 &gt; 阶段 2 + 卸载 &gt; 阶段 3 &gt; 阶段 3 + 卸载</p>
+<ul>
+<li>GPU 内存使用情况（右侧的 GPU 内存效率高于左侧）</li>
+</ul>
+<p>阶段 0 (DDP) &lt; 阶段 1 &lt; 阶段 2 &lt; 阶段 2 + 卸载 &lt; 阶段 3 &lt; 阶段 3 + 卸载</p>
+<p>因此，当您想要在适应最少数量的 GPU 的同时获得最快的执行速度时，您可以遵循以下流程。我们从最快的方法开始，如果遇到 GPU OOM，我们就会转向下一个较慢的方法，但会使用更少的 GPU 内存。等等等等。</p>
+<p>首先将批量大小设置为 1（您始终可以使用梯度累积来获得任何所需的有效批量大小）。</p>
+<p>启用<code>--gradient_checkpointing 1</code>（HF Trainer）或直接<code>model.gradient_checkpointing_enable()</code>- 如果 OOM 那么</p>
+<p>首先尝试 ZeRO 第 2 阶段。如果 OOM 那么</p>
+<p>尝试 ZeRO 阶段 2 + <code>offload_optimizer</code>- 如果 OOM 那么</p>
+<p>切换到 ZeRO 阶段 3 - 如果 OOM 那么</p>
+<p>启用<code>offload_param</code>-<code>cpu</code>如果 OOM 那么</p>
+<p>启用<code>offload_optimizer</code>-<code>cpu</code></p>
+<p>一块GPU使用deepspeed的好处：</p>
+<p>1）它具有 ZeRO 卸载功能，可以将一些计算和内存委托给主机的 CPU 和 RAM，从而为模型的需求留下更多 GPU 资源 - 例如更大的批量大小，或者能够拟合通常不适合的非常大的模型。</p>
+<p>2）它提供了智能 GPU 内存管理系统，可最大限度地减少内存碎片，从而再次允许您适应更大的模型和数据批次。</p>
+<p>通过deepspeed初步预估模型占用的GPU和CPU空间大小</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">from transformers import AutoModel</span><br><span class="line">from deepspeed.runtime.zero.stage3 import estimate_zero3_model_states_mem_needs_all_live</span><br><span class="line">model = AutoModel.from_pretrained(&quot;bigscience/T0_3B&quot;)</span><br><span class="line">estimate_zero3_model_states_mem_needs_all_live(model, num_gpus_per_node=1, num_nodes=1)</span><br></pre></td></tr></table></figure>
+<p>参考：</p>
+<p><a href="https://link.zhihu.com/?target=https%3A//huggingface.co/docs/transformers/main/main_classes/deepspeed%23nontrainer-deepspeed-integration">https://huggingface.co/docs/transformers/main/main_classes/deepspeed#nontrainer-deepspeed-integration</a></p>
+<p><a href="https://link.zhihu.com/?target=https%3A//www.deepspeed.ai/docs/config-json/%23autotuning">DeepSpeed Configuration JSO</a></p>
+<p>本文转自 <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/645627795">https://zhuanlan.zhihu.com/p/645627795</a>，如有侵权，请联系删除。</p>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">YU</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://github.com/yjangout/yjangout.github.io/article/4cf94f8d.html">https://github.com/yjangout/yjangout.github.io/article/4cf94f8d.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://github.com/yjangout/yjangout.github.io" target="_blank">MasterY Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"></div><div class="post_share"><div class="social-share" data-image="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" data-sites="wechat,weibo,qq,facebook,twitter"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js" defer></script></div></div><div class="post-reward"><div class="reward-button"><i class="fas fa-qrcode"></i> 打赏<div class="reward-main"><ul class="reward-all"><li class="reward-item"><a href="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1.3/images/alipay.jpg" target="_blank"><img class="post-qr-code-img" data-lazy-src="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1.3/images/alipay.jpg" alt="微信"/></a><div class="post-qr-code-desc">微信</div></li><li class="reward-item"><a href="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1.3/images/wechat.jpg" target="_blank"><img class="post-qr-code-img" data-lazy-src="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1.3/images/wechat.jpg" alt="支付宝"/></a><div class="post-qr-code-desc">支付宝</div></li></ul></div></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/article/173475bb.html"><img class="prev-cover" data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">gd的使用</div></div></a></div><div class="next-post pull-right"><a href="/article/9f8dd7d8.html"><img class="next-cover" data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="onerror=null;src='/img/404.jpg'" alt="cover of next post"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">用户画像</div></div></a></div></nav><hr/><div id="post-comment"><div class="comment-head"><div class="comment-headline"><i class="fas fa-comments fa-fw"></i><span> 评论</span></div><div id="comment-switch"><span class="first-comment">Twikoo</span><span class="switch-btn"></span><span class="second-comment">Valine</span></div></div><div class="comment-wrap"><div><div id="twikoo-wrap"></div></div><div><div class="vcomment" id="vcomment"></div></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="card-info-avatar is-center"><img class="avatar-img" data-lazy-src="https://cdn.jsdelivr.net/gh/junyucoding/static@master/images/avater1.jpeg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/><div class="author-info__name">YU</div><div class="author-info__description">理想的生活是生活的理想</div></div><div class="card-info-data"><div class="card-info-data-item is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">18</div></a></div><div class="card-info-data-item is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">18</div></a></div><div class="card-info-data-item is-center"><a href="/categories/"><div class="headline">分类</div><div class="length-num">10</div></a></div></div><a class="button--animated" id="card-info-btn" href="https://github.com/junyucoding"><i class="fab fa-github"></i><span>跟我~</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/junyucoding" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="mailto:1060737917@qq.com" target="_blank" title="Email"><i class="fas fa-envelope"></i></a><a class="social-icon" href="https://music.163.com" target="_blank" title="Music"><i class="fa fa-music"></i></a><a class="social-icon" href="http://wpa.qq.com/msgrd?v=3&amp;uin=1060737917&amp;site=qq&amp;menu=yes" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="https://blog.csdn.net/qq_45505100/" target="_blank" title="CSDN"><i class="fab fa-cuttlefish"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn card-announcement-animation"></i><span>公告</span></div><div class="announcement_content">一个大哥 在忙~ <br><b>Don't do anything illegal</b><br>目前还在绝赞建站中。<br><b>网站从https://dreamwithme.cn 迁移->到本站</b></div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#base%E6%A8%A1%E5%9E%8B%E5%92%8Cchat%E6%A8%A1%E5%9E%8B%E7%9A%84%E5%8C%BA%E5%88%AB%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text"> base模型和chat模型的区别是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#rlhf"><span class="toc-number">2.</span> <span class="toc-text"> RLHF</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#deepspeed"><span class="toc-number">3.</span> <span class="toc-text"> deepspeed</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80-%E6%89%B9%E9%87%8F%E5%A4%A7%E5%B0%8F%E7%9A%84%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0"><span class="toc-number">4.</span> <span class="toc-text"> 一、批量大小的相关参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-train_batch_sizeint"><span class="toc-number">4.1.</span> <span class="toc-text"> 1、train_batch_size[int]</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-train_micro_batch_size_per_gpuint"><span class="toc-number">4.2.</span> <span class="toc-text"> 2、train_micro_batch_size_per_gpu[int]</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-gradient_accumulation_steps"><span class="toc-number">4.3.</span> <span class="toc-text"> 3、gradient_accumulation_steps</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C-%E4%BC%98%E5%8C%96%E5%99%A8%E7%9B%B8%E5%85%B3%E7%9A%84%E5%8F%82%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text"> 二、优化器相关的参数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-adam-adamw%E4%BC%98%E5%8C%96%E5%99%A8%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="toc-number">5.1.</span> <span class="toc-text"> 1、Adam、AdamW优化器的使用</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-bit-adam-optimizer"><span class="toc-number">5.2.</span> <span class="toc-text"> 2、1-bit Adam optimizer</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89-%E9%80%9A%E8%BF%87fp16%E8%AE%AD%E7%BB%83%E7%9B%B8%E5%85%B3%E7%9A%84%E5%8F%82%E6%95%B0"><span class="toc-number">6.</span> <span class="toc-text"> 三、通过FP16训练相关的参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B-%E9%80%9A%E8%BF%87bfloat16-%E8%AE%AD%E7%BB%83%E7%9B%B8%E5%85%B3%E7%9A%84%E5%8F%82%E6%95%B0"><span class="toc-number">7.</span> <span class="toc-text"> 四、通过BFLOAT16 训练相关的参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94-fp16-%E8%AE%AD%E7%BB%83%E7%9A%84-zero-%E4%BC%98%E5%8C%96"><span class="toc-number">8.</span> <span class="toc-text"> 五、FP16 训练的 ZeRO 优化</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/article/f05d7230.html" title="算法常用代码框架"><img data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="算法常用代码框架"/></a><div class="content"><a class="title" href="/article/f05d7230.html" title="算法常用代码框架">算法常用代码框架</a><time datetime="2024-04-02T12:30:12.000Z" title="发表于 2024-04-02 20:30:12">2024-04-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/article/173475bb.html" title="gd的使用"><img data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="gd的使用"/></a><div class="content"><a class="title" href="/article/173475bb.html" title="gd的使用">gd的使用</a><time datetime="2024-01-15T01:56:49.000Z" title="发表于 2024-01-15 09:56:49">2024-01-15</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/article/4cf94f8d.html" title="llmfinetune"><img data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="llmfinetune"/></a><div class="content"><a class="title" href="/article/4cf94f8d.html" title="llmfinetune">llmfinetune</a><time datetime="2024-01-10T06:49:08.000Z" title="发表于 2024-01-10 14:49:08">2024-01-10</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/article/9f8dd7d8.html" title="用户画像"><img data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="用户画像"/></a><div class="content"><a class="title" href="/article/9f8dd7d8.html" title="用户画像">用户画像</a><time datetime="2023-12-18T06:36:43.000Z" title="发表于 2023-12-18 14:36:43">2023-12-18</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/article/4984482e.html" title="金融基础知识"><img data-lazy-src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="金融基础知识"/></a><div class="content"><a class="title" href="/article/4984482e.html" title="金融基础知识">金融基础知识</a><time datetime="2023-12-17T14:30:23.000Z" title="发表于 2023-12-17 22:30:23">2023-12-17</time></div></div></div></div></div></div></main><footer id="footer" style="background-image: url(https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/img/default.jpg)"><div id="footer-wrap"><div class="copyright">&copy;2021 - 2024 By YU</div><div class="framework-info"><span>Framework </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>Theme </span><a href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div><div class="footer_custom_text"><div class="github-badge"><a style="color:#fff" rel="license" href="https://github.com/" target="_blank" title="静态网页托管于 GitHub Pages "><span class="badge-subject">Hosted</span><span class="badge-value bg-brightgreen">GitHub</span></a></div><div class="github-badge"><a style="color:#fff" rel="license" href="https://cloud.tencent.com/" target="_blank" title="腾讯云提供域名相关服务"><span class="badge-subject">DNS</span><span class="badge-value bg-blueviolet">TencentCloud</span></a></div><div class="github-badge"><a style="color:#fff" rel="license" href="https://www.jsdelivr.com/" target="_blank" title="jsDelivr 提供 CDN 加速服务"><span class="badge-subject">CDN</span><span class="badge-value bg-orange">JsDelivr</span></a></div><br><a  href="/">理想的生活是生活的理想</a><br><img src="https://cdn.jsdelivr.net/gh/TRHX/CDN-for-itrhx.com@3.0.9/images/icp.png" style="width:18px;height:18px;margin-bottom:-4px"><a href="https://beian.miit.gov.cn/" target="_blank"> 赣ICP备2021002822号</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="font-plus" type="button" title="放大字体"><i class="fas fa-plus"></i></button><button id="font-minus" type="button" title="缩小字体"><i class="fas fa-minus"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="chat_btn" type="button" title="rightside.chat_btn"><i class="fas fa-sms"></i></button><a id="to_comment" href="#post-comment" title="直达评论"><i class="fas fa-comments"></i></a><button id="go-up" type="button" title="回到顶部"><i class="fas fa-arrow-up"></i></button></div></div><div><script src="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1/utils.js"></script><script src="https://cdn.jsdelivr.net/gh/junyucoding/static@1.1/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><script src="https://cdn.jsdelivr.net/npm/vanilla-lazyload/dist/lazyload.iife.min.js"></script><script src="https://cdn.jsdelivr.net/npm/node-snackbar/dist/snackbar.min.js"></script><div class="js-pjax"><script>(()=>{
+  const $countDom = document.getElementById('twikoo-count')
+  const init = () => {
+    let initData = {
+      el: '#twikoo-wrap',
+      envId: 'myblogcomment-6gj08hfd97146347',
+      region: ''
+    }
+
+    if (false) {
+      const otherData = false
+      initData = Object.assign(initData, otherData)
+    }
+    
+    twikoo.init(initData)
+  }
+
+  const getCount = () => {
+    twikoo.getCommentsCount({
+      envId: 'myblogcomment-6gj08hfd97146347',
+      urls: [window.location.pathname],
+      includeReply: false
+    }).then(function (res) {
+      $countDom.innerText = res[0].count
+    }).catch(function (err) {
+      console.error(err);
+    });
+  }
+
+  const loadTwikoo = (bool = false) => {
+    if (typeof twikoo === 'object') {
+      init()
+      bool && $countDom && setTimeout(getCount,0)
+    } else {
+      getScript('https://cdn.jsdelivr.net/npm/twikoo@1.0.0/dist/twikoo.all.min.js').then(()=> {
+        init()
+        bool && $countDom && setTimeout(getCount,0)
+      })
+    }
+  }
+
+  if ('Twikoo' === 'Twikoo' || !false) {
+    if (false) btf.loadComment(document.getElementById('twikoo-wrap'), loadTwikoo)
+    else loadTwikoo(true)
+  } else {
+    window.loadOtherComment = () => {
+      loadTwikoo()
+    }
+  }
+})()</script><script>function loadValine () {
+  function initValine () {
+    let initData = {
+      el: '#vcomment',
+      appId: 'CmxbaEl42sgwnPEAXYqOB94T-gzGzoHsz',
+      appKey: 'DtmtLamNjL0K2iVl0xnL7yfe',
+      placeholder: 'ヾﾉ≧∀≦)o来啊，快活啊! 支持markdown~ 网址选填',
+      avatar: 'https://gravatar.loli.net/avatar/d41d8cd98f00b204e9800998ecf8427e?d=wavatar&amp;v=1.4.14',
+      meta: 'nick,mail,link'.split(','),
+      pageSize: '10',
+      lang: 'zh-CN',
+      recordIP: false,
+      serverURLs: '',
+      emojiCDN: '',
+      emojiMaps: "",
+      enableQQ: true,
+      path: window.location.pathname,
+    }
+
+    if (true) { 
+      initData.requiredFields= ('nick,mail'.split(','))
+    }
+    
+    if (false) {
+      const otherData = false
+      initData = Object.assign(initData, otherData)
+    }
+    
+    const valine = new Valine(initData)
+  }
+
+  if (typeof Valine === 'function') initValine() 
+  else getScript('https://cdn.jsdelivr.net/npm/valine/dist/Valine.min.js').then(initValine)
+}
+
+if ('Twikoo' === 'Valine' || !false) {
+  if (false) btf.loadComment(document.getElementById('vcomment'),loadValine)
+  else setTimeout(loadValine, 0)
+} else {
+  function loadOtherComment () {
+    loadValine()
+  }
+}</script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script></div><script> let backimg =["url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/12.jpg)","url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/24.jpg)","url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/27.jpg)","url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/28.jpg)","url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/42.jpg)","url(https://cdn.jsdelivr.net/gh/junyucoding/CDN/images/46.jpg)"];let index =Math.ceil(Math.random() * (backimg.length-1));document.getElementById("page-header").style.backgroundImage = backimg[index]</script><div class="aplayer no-destroy" data-id="870953955" data-server="netease" data-type="playlist" data-fixed="true" data-mini="true" data-listFolded="false" data-order="list" data-preload="none" data-autoplay="false" muted></div><canvas class="fireworks" mobile="false"></canvas><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/fireworks.min.js"></script><script defer="defer" id="ribbon" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-ribbon.min.js" size="150" alpha="0.6" zIndex="-1" mobile="false" data-click="false"></script><script defer="defer" id="fluttering_ribbon" mobile="true" src="https://cdn.jsdelivr.net/npm/butterfly-extsrc@1/dist/canvas-fluttering-ribbon.min.js"></script><script src="https://cdn.jsdelivr.net/npm/pjax/pjax.min.js"></script><script>let pjaxSelectors = [
+  'title',
+  '#config_change',
+  '#body-wrap',
+  '#rightside-config-hide',
+  '#rightside-config-show',
+  '.js-pjax'
+]
+
+if (false) {
+  pjaxSelectors.unshift('meta[property="og:image"]', 'meta[property="og:title"]', 'meta[property="og:url"]')
+}
+
+var pjax = new Pjax({
+  elements: 'a:not([target="_blank"]):not([href="/shuoshuo/"])',
+  selectors: pjaxSelectors,
+  cacheBust: false,
+  analytics: false,
+  scrollRestoration: false
+})
+
+document.addEventListener('pjax:complete', function () {
+  window.refreshFn()
+
+  document.querySelectorAll('script[data-pjax]').forEach(item => {
+    const newScript = document.createElement('script')
+    const content = item.text || item.textContent || item.innerHTML || ""
+    Array.from(item.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value))
+    newScript.appendChild(document.createTextNode(content))
+    item.parentNode.replaceChild(newScript, item)
+  })
+
+  GLOBAL_CONFIG.islazyload && window.lazyLoadInstance.update()
+
+  typeof chatBtnFn === 'function' && chatBtnFn()
+  typeof panguInit === 'function' && panguInit()
+
+  if (typeof gtag === 'function') {
+    gtag('config', '', {'page_path': window.location.pathname});
+  }
+
+  typeof loadMeting === 'function' && document.getElementsByClassName('aplayer').length && loadMeting()
+
+  // Analytics
+  if (false) {
+    MtaH5.pgv()
+  }
+
+  // prismjs
+  typeof Prism === 'object' && Prism.highlightAll()
+
+  typeof preloader === 'object' && preloader.endLoading()
+})
+
+
+document.addEventListener('pjax:send', function () {
+  typeof preloader === 'object' && preloader.initLoading()
+  
+  if (window.aplayers) {
+    for (let i = 0; i < window.aplayers.length; i++) {
+      if (!window.aplayers[i].options.fixed) {
+        window.aplayers[i].destroy()
+      }
+    }
+  }
+
+  typeof typed === 'object' && typed.destroy()
+
+  //reset readmode
+  const $bodyClassList = document.body.classList
+  $bodyClassList.contains('read-mode') && $bodyClassList.remove('read-mode')
+
+})</script></div></body></html>
